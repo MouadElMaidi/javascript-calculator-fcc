@@ -9,12 +9,24 @@ function App() {
 
 
   React.useEffect(() => {
-    if(answer !== ""){
+    if (answer !== "") {
       setUpperDisplay(statement + "=" + answer);
+      setBottomDisplay(answer)
     }
-    else
+    else {
       setUpperDisplay(statement)
+      if (endWithOperator(statement))
+        setBottomDisplay(statement[statement.length - 1]);
+      else {
+        setBottomDisplay(getLastDig(statement))
+      }
+    }
   }, [statement, answer])
+
+
+
+
+
 
   function endWithOperator(prev) {
     const endsWithOperatorRegex = /([/]|[+]|-|x)$/
@@ -56,7 +68,7 @@ function App() {
 
   function handleNumClick(event) {
     const numClicked = event.target.innerHTML;
-    if(answer !== "") {
+    if (answer !== "") {
       setstatement("0")
       setAnswer("")
     }
@@ -71,12 +83,19 @@ function App() {
         if (endWithOperator(prev)) {
           return prev + "0."
         }
-        if (prev.endsWith(".")) {
+        if (getLastDig(prev).indexOf(".") !== -1) {
           return prev;
         }
       }
       return prev + numClicked;
     })
+  }
+
+  function getLastDig(str) {
+    const regex = /[/]|[+]|-|x/
+    const numbers = str.split(regex).filter(el => el !== "")
+    const lastNum = numbers[numbers.length - 1];
+    return lastNum;
   }
 
 
@@ -89,7 +108,7 @@ function App() {
 
   function handleOperatorClick(event) {
     const operator = event.target.innerHTML;
-    if(answer !== "") {
+    if (answer !== "") {
       setstatement(answer);
       setAnswer("");
     }
@@ -113,20 +132,22 @@ function App() {
   function handleEqualClick() {
     const endWithOpRegex = /(-|[+]|[/]|x)$/
     const endsWithOp = endWithOpRegex.test(statement);
-    const endsWithTwoOps = endWithOpRegex.test(statement.substring(0, statement.length));
+    const endsWithTwoOps = endWithOpRegex.test(statement) &&
+      endWithOpRegex.test(statement.substring(0, statement.length - 1));
     let finalResult = "";
-    if (endsWithOp) {
-      finalResult = (calculate(statement.substring(0, statement.length - 1)))
-      setstatement(prev => prev.substring(0, prev.length - 1));
-      setAnswer(finalResult.toString())
-      return
-    }
     if (endsWithTwoOps) {
       finalResult = (calculate(statement.substring(0, statement.length - 2)))
       setstatement(prev => prev.substring(0, prev.length - 2));
       setAnswer(finalResult.toString())
       return
     }
+    if (endsWithOp) {
+      finalResult = (calculate(statement.substring(0, statement.length - 1)))
+      setstatement(prev => prev.substring(0, prev.length - 1));
+      setAnswer(finalResult.toString())
+      return
+    }
+
     else {
       finalResult = calculate(statement);
       setAnswer(finalResult.toString())
@@ -134,42 +155,43 @@ function App() {
     }
   }
 
+  const numArrIds = ["one", "two", "three", "four", "five", "six", "seven",
+    "eight", "nine"]
   const numArr = [];
   for (let i = 1; i < 10; i++) {
     numArr.push(<button key={i} className="calculator--number--button"
-      onClick={(event) => handleNumClick(event)} id={i}>
+      onClick={(event) => handleNumClick(event)} id={numArrIds[i - 1]}>
       {i}
     </button>)
   }
 
-  console.log("rendered")
   return (
     <div className="calculator">
       <div className='calculator--display'>
         <div className="calculator--display--above">{upperDisplay}</div>
-        <div className="calculator--display--below">{bottomDisplay
+        <div className="calculator--display--below" id="display">{bottomDisplay
         }</div>
       </div>
       <div className='calculator--buttons'>
         <button className='calculator--ac--button'
-          onClick={reset}>AC</button>
+          onClick={reset} id="clear">AC</button>
         <button className="calculator--operator--button"
-          onClick={(event) => handleOperatorClick(event)}>/</button>
+          onClick={(event) => handleOperatorClick(event)} id="divide">/</button>
         <button className="calculator--operator--button"
-          onClick={(event) => handleOperatorClick(event)}>x</button>
+          onClick={(event) => handleOperatorClick(event)} id="multiply">x</button>
         {numArr}
         <button className="calculator--operator--button subtract"
-          onClick={(event) => handleOperatorClick(event)}>-</button>
+          onClick={(event) => handleOperatorClick(event)} id="subtract">-</button>
         <button className="calculator--operator--button add"
-          onClick={(event) => handleOperatorClick(event)}>
+          onClick={(event) => handleOperatorClick(event)} id="add">
           +
         </button>
         <button className="calculator--number--button zero"
           onClick={(event) => handleNumClick(event)} id="zero" value={0}>0</button>
         <button className="calculator--number--button dot"
-          onClick={(event) => handleNumClick(event)} id="dot" value={"."}>.</button>
+          onClick={(event) => handleNumClick(event)} value={"."} id="decimal">.</button>
         <button className="calculator--equal--button"
-          onClick={handleEqualClick}>=</button>
+          onClick={handleEqualClick} id="equals">=</button>
       </div>
     </div>
   );
